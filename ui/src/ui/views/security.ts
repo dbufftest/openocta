@@ -177,11 +177,11 @@ export function renderSecurity(props: SecurityProps) {
             <div class="sandbox-form-center">
               <div class="field" style="width: 100%; margin-bottom: 16px;">
                 <span>${t("sandboxAllowedPaths")}</span>
-                <span class="textarea"><textarea rows="3" .value=${allowedPaths} placeholder="/tmp&#10;./workspace" @input=${(e: Event) => props.onPatch(["sandbox", "allowedPaths"], splitLines((e.target as HTMLTextAreaElement).value))}></textarea></span>
+                <span class="textarea"><textarea rows="4" .value=${allowedPaths} placeholder="/tmp&#10;./workspace" @input=${(e: Event) => props.onPatch(["sandbox", "allowedPaths"], splitLines((e.target as HTMLTextAreaElement).value))}></textarea></span>
               </div>
               <div class="field" style="width: 100%; margin-bottom: 16px;">
                 <span>${t("sandboxNetworkAllow")}</span>
-                <span class="textarea"><textarea rows="2" .value=${networkAllow} placeholder="localhost&#10;127.0.0.1" @input=${(e: Event) => props.onPatch(["sandbox", "networkAllow"], splitLines((e.target as HTMLTextAreaElement).value))}></textarea></span>
+                <span class="textarea"><textarea rows="4" .value=${networkAllow} placeholder="localhost&#10;127.0.0.1" @input=${(e: Event) => props.onPatch(["sandbox", "networkAllow"], splitLines((e.target as HTMLTextAreaElement).value))}></textarea></span>
               </div>
               <div style="margin: 24px 0;">
                 <div class="card-sub" style="margin-bottom: 12px; font-size: 14px;">${t("sandboxResourceLimit")}</div>
@@ -255,17 +255,17 @@ export function renderSecurity(props: SecurityProps) {
             <div class="muted" style="font-size: 12px; margin-bottom: 12px;">${t("securityRulesHint")}</div>
             <div class="field" style="margin-bottom: 16px;">
               <span style="font-size: 14px;">${t("securityActionDeny")}</span>
-              <span class="textarea"><textarea rows="3" .value=${denyRulesText} placeholder="sudo&#10;dd&#10;mkfs&#10;rm -rf" @input=${(e: Event) => patchRulesFromTextareas((e.target as HTMLTextAreaElement).value, askRulesText, allowRulesText)}></textarea></span>
+              <span class="textarea"><textarea rows="4" .value=${denyRulesText} placeholder="sudo&#10;dd&#10;mkfs&#10;rm -rf" @input=${(e: Event) => patchRulesFromTextareas((e.target as HTMLTextAreaElement).value, askRulesText, allowRulesText)}></textarea></span>
               <div class="muted" style="font-size: 12px; margin-top: 4px;">${t("securityRulesDenyHint")}</div>
             </div>
             <div class="field" style="margin-bottom: 16px;">
               <span style="font-size: 14px;">${t("securityActionAsk")}</span>
-              <span class="textarea"><textarea rows="3" .value=${askRulesText} placeholder="rm&#10;mv&#10;cp" @input=${(e: Event) => patchRulesFromTextareas(denyRulesText, (e.target as HTMLTextAreaElement).value, allowRulesText)}></textarea></span>
+              <span class="textarea"><textarea rows="4" .value=${askRulesText} placeholder="rm&#10;mv&#10;cp" @input=${(e: Event) => patchRulesFromTextareas(denyRulesText, (e.target as HTMLTextAreaElement).value, allowRulesText)}></textarea></span>
               <div class="muted" style="font-size: 12px; margin-top: 4px;">${t("securityRulesAskHint")}</div>
             </div>
             <div class="field" style="margin-bottom: 16px;">
               <span style="font-size: 14px;">${t("securityActionAllow")}</span>
-              <span class="textarea"><textarea rows="3" .value=${allowRulesText} placeholder="ls&#10;pwd&#10;echo" @input=${(e: Event) => patchRulesFromTextareas(denyRulesText, askRulesText, (e.target as HTMLTextAreaElement).value)}></textarea></span>
+              <span class="textarea"><textarea rows="4" .value=${allowRulesText} placeholder="ls&#10;pwd&#10;echo" @input=${(e: Event) => patchRulesFromTextareas(denyRulesText, askRulesText, (e.target as HTMLTextAreaElement).value)}></textarea></span>
               <div class="muted" style="font-size: 12px; margin-top: 4px;">${t("securityRulesAllowHint")}</div>
             </div>
             <details style="margin-top: 16px;">
@@ -273,7 +273,7 @@ export function renderSecurity(props: SecurityProps) {
               <div style="margin-top: 12px;">
                 <div class="field" style="margin-bottom: 12px;">
                   <span style="font-size: 14px;">${t("sandboxBanArguments")}</span>
-                  <span class="textarea"><textarea rows="2" .value=${banArguments} placeholder="--no-preserve-root&#10;/dev/" @input=${(e: Event) => props.onPatch(["commandPolicy", "banArguments"], splitLines((e.target as HTMLTextAreaElement).value))}></textarea></span>
+                  <span class="textarea"><textarea rows="4" .value=${banArguments} placeholder="--no-preserve-root&#10;/dev/" @input=${(e: Event) => props.onPatch(["commandPolicy", "banArguments"], splitLines((e.target as HTMLTextAreaElement).value))}></textarea></span>
                 </div>
                 <div class="field" style="margin-bottom: 12px;">
                   <span style="font-size: 14px;">${t("securityMaxLength")}</span>
@@ -281,7 +281,7 @@ export function renderSecurity(props: SecurityProps) {
                 </div>
                 <div class="field">
                   <span style="font-size: 14px;">${t("sandboxSecretPatterns")}</span>
-                  <span class="textarea"><textarea rows="2" style="font-family: var(--mono);" .value=${secretPatterns} placeholder="sk-[a-zA-Z0-9]{48}" @input=${(e: Event) => props.onPatch(["commandPolicy", "secretPatterns"], splitLines((e.target as HTMLTextAreaElement).value))}></textarea></span>
+                  <span class="textarea"><textarea rows="4" style="font-family: var(--mono);" .value=${secretPatterns} placeholder="sk-[a-zA-Z0-9]{48}" @input=${(e: Event) => props.onPatch(["commandPolicy", "secretPatterns"], splitLines((e.target as HTMLTextAreaElement).value))}></textarea></span>
                 </div>
               </div>
             </details>

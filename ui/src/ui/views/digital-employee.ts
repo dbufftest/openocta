@@ -158,7 +158,7 @@ export function renderDigitalEmployeeEditModal(props: DigitalEmployeeEditModalPr
         <div class="field" style="margin-top: 12px;">
           <span>描述</span>
           <span class="textarea"><textarea
-            rows="2"
+            rows="4"
             .value=${props.editDescription}
             @input=${(e: Event) =>
               props.onEditDescriptionChange(
@@ -200,7 +200,7 @@ export function renderDigitalEmployeeEditModal(props: DigitalEmployeeEditModalPr
             props.editMcpMode === "raw"
               ? html`
                   <span class="textarea"><textarea
-                    rows="4"
+                    rows="10"
                     style="margin-top: 8px;"
                     .value=${props.editMcpJson}
                     @input=${(e: Event) =>
@@ -401,7 +401,7 @@ export function renderDigitalEmployeeCreateModal(props: DigitalEmployeeCreateMod
         <div class="field" style="margin-top: 12px;">
           <span>描述</span>
           <span class="textarea"><textarea
-            rows="2"
+            rows="4"
             .value=${props.createDescription}
             @input=${(e: Event) =>
               props.onCreateDescriptionChange((e.target as HTMLTextAreaElement).value)}
@@ -451,7 +451,7 @@ export function renderDigitalEmployeeCreateModal(props: DigitalEmployeeCreateMod
                   ${props.createMcpMode === "raw"
                     ? html`
                         <span class="textarea"><textarea
-                          rows="4"
+                          rows="10"
                           style="margin-top: 8px;"
                           .value=${props.mcpJson}
                           @input=${(e: Event) =>
@@ -668,7 +668,7 @@ export function renderDigitalEmployee(props: DigitalEmployeeProps) {
                   <div class="field" style="margin-top: 12px;">
                     <span>描述</span>
                     <span class="textarea"><textarea
-                      rows="2"
+                      rows="4"
                       .value=${props.createDescription}
                       @input=${(e: Event) =>
                         props.onCreateDescriptionChange(
@@ -724,7 +724,7 @@ export function renderDigitalEmployee(props: DigitalEmployeeProps) {
                                 props.createMcpMode === "raw"
                                   ? html`
                                       <span class="textarea"><textarea
-                                        rows="4"
+                                        rows="10"
                                         style="margin-top: 8px;"
                                         .value=${props.mcpJson}
                                         @input=${(e: Event) =>
@@ -1053,7 +1053,7 @@ function renderEmployeeMcpItem(item: EmployeeMcpItem, cb: EmployeeMcpCallbacks):
                 <div class="field" style="margin-top: 10px;">
                   <span>JSON</span>
                   <span class="textarea"><textarea
-                    rows="6"
+                    rows="10"
                     style="font-family: var(--mono); font-size: 12px;"
                     .value=${item.rawJson}
                     @input=${(e: Event) =>
