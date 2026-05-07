@@ -1453,6 +1453,7 @@ func SkillsDeleteHandler(opts HandlerOpts) error {
 		return nil
 	}
 	_ = installmetadata.RemoveByRemoteID(env, "skill", params.SkillKey)
+	_ = installmetadata.RemoveByLocalID(env, "skill", filepath.Base(baseDir))
 
 	opts.Respond(true, map[string]interface{}{
 		"ok":       true,

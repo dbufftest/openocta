@@ -178,6 +178,14 @@ func RemoveByLocalID(env func(string) string, kind, localID string) error {
 			}
 		}
 		m.Employees = filtered
+	case "skill":
+		filtered := make([]Entry, 0, len(m.Skills))
+		for _, e := range m.Skills {
+			if e.LocalID != localID {
+				filtered = append(filtered, e)
+			}
+		}
+		m.Skills = filtered
 	case "mcp":
 		filtered := make([]Entry, 0, len(m.Mcps))
 		for _, e := range m.Mcps {
