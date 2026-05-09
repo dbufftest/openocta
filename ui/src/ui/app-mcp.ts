@@ -63,10 +63,10 @@ export function handleMcpViewModeChange(host: AppViewState, mode: "list" | "card
 export function handleMcpAddServer(host: AppViewState) {
   host.mcpAddModalOpen = true;
   host.mcpAddName = "";
-  host.mcpAddDraft = { enabled: true, command: "npx", args: ["-y", "@example/mcp-server-name"], env: { API_KEY: "your-api-key" } };
+  host.mcpAddDraft = {};
   host.mcpAddConnectionType = "stdio";
   host.mcpAddEditMode = "form";
-  host.mcpAddRawJson = JSON.stringify({ enabled: true, command: "npx", args: ["-y", "@example/mcp-server-name"], env: { API_KEY: "your-api-key" } }, null, 2);
+  host.mcpAddRawJson = "{}";
   host.mcpAddRawError = null;
 }
 
@@ -86,6 +86,22 @@ export function handleMcpAddFormPatch(host: AppViewState, patch: Partial<McpServ
 
 export function handleMcpAddConnectionTypeChange(host: AppViewState, type: "stdio" | "url" | "service") {
   host.mcpAddConnectionType = type;
+  const draft = host.mcpAddDraft as Record<string, unknown>;
+  if (type === "stdio") {
+    delete draft.url;
+    delete draft.service;
+    delete draft.serviceUrl;
+  } else if (type === "url") {
+    delete draft.command;
+    delete draft.args;
+    delete draft.service;
+    delete draft.serviceUrl;
+  } else if (type === "service") {
+    delete draft.command;
+    delete draft.args;
+    delete draft.url;
+  }
+  host.mcpAddDraft = { ...draft };
 }
 
 export function handleMcpAddRawChange(host: AppViewState, json: string) {
@@ -101,7 +117,7 @@ export function handleMcpAddRawChange(host: AppViewState, json: string) {
 
 export function handleMcpAddEditModeChange(host: AppViewState, mode: "form" | "raw") {
   host.mcpAddEditMode = mode;
-  if (mode === "raw") {
+  if (mode === "raw" && (!host.mcpAddRawJson || host.mcpAddRawJson.trim() === "{}")) {
     host.mcpAddRawJson = JSON.stringify(host.mcpAddDraft, null, 2);
   }
 }

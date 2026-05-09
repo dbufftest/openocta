@@ -1033,6 +1033,7 @@ export function renderApp(state: AppViewState) {
                           .keyword=${state.employeeMarketQuery}
                           .gatewayHost=${state.settings?.gatewayUrl?.trim()}
                           .token=${state.settings?.token?.trim()}
+                          .reloadVersion=${state.employeeMarketReloadVersion}
                           ?disabled=${state.employeeMarketLoading}
                           @category-select=${(e: CustomEvent) => { state.employeeMarketCategory = e.detail.name; state.employeeMarketCategoryDescendants = e.detail.descendantNames ?? []; }}
                         ></category-tree-sidebar>
@@ -1050,6 +1051,7 @@ export function renderApp(state: AppViewState) {
                             .keyword=${state.skillLibraryQuery}
                             .gatewayHost=${state.settings?.gatewayUrl?.trim()}
                             .token=${state.settings?.token?.trim()}
+                            .reloadVersion=${state.skillLibraryReloadVersion}
                             ?disabled=${state.skillLibraryLoading}
                             @category-select=${(e: CustomEvent) => { state.skillLibraryCategory = e.detail.name; state.skillLibraryCategoryDescendants = e.detail.descendantNames ?? []; }}
                           ></category-tree-sidebar>
@@ -1067,6 +1069,7 @@ export function renderApp(state: AppViewState) {
                               .keyword=${state.toolLibraryQuery}
                               .gatewayHost=${state.settings?.gatewayUrl?.trim()}
                               .token=${state.settings?.token?.trim()}
+                              .reloadVersion=${state.toolLibraryReloadVersion}
                               ?disabled=${state.toolLibraryLoading}
                               @category-select=${(e: CustomEvent) => { state.toolLibraryCategory = e.detail.name; state.toolLibraryCategoryDescendants = e.detail.descendantNames ?? []; }}
                             ></category-tree-sidebar>
@@ -1715,6 +1718,7 @@ export function renderApp(state: AppViewState) {
                       : String(err);
                   } finally {
                     state.employeeMarketLoading = false;
+                    state.employeeMarketReloadVersion = (state.employeeMarketReloadVersion || 0) + 1;
                   }
                 };
 
@@ -1733,7 +1737,15 @@ export function renderApp(state: AppViewState) {
                 items: state.employeeMarketItems,
                 selectedId: state.employeeMarketSelectedId,
                 selectedDetail: state.employeeMarketSelectedDetail,
-                onQueryChange: (next) => (state.employeeMarketQuery = next),
+                onQueryChange: (next) => {
+                  if (state.employeeMarketQueryDebounceTimer) {
+                    window.clearTimeout(state.employeeMarketQueryDebounceTimer);
+                  }
+                  state.employeeMarketQueryDebounceTimer = window.setTimeout(() => {
+                    state.employeeMarketQuery = next;
+                    state.employeeMarketQueryDebounceTimer = null;
+                  }, 200);
+                },
                 onCategoryChange: (next) => (state.employeeMarketCategory = next),
                 onRefresh: async () => {
                     await onRefresh();
@@ -2089,6 +2101,7 @@ export function renderApp(state: AppViewState) {
                     state.skillLibraryError = (err as any)?.message ? String((err as any).message) : String(err);
                   } finally {
                     state.skillLibraryLoading = false;
+                    state.skillLibraryReloadVersion = (state.skillLibraryReloadVersion || 0) + 1;
                   }
                 };
 
@@ -2158,7 +2171,15 @@ export function renderApp(state: AppViewState) {
                     await onRefresh();
                   }
                 },
-                onQueryChange: (next) => (state.skillLibraryQuery = next),
+                onQueryChange: (next) => {
+                  if (state.skillLibraryQueryDebounceTimer) {
+                    window.clearTimeout(state.skillLibraryQueryDebounceTimer);
+                  }
+                  state.skillLibraryQueryDebounceTimer = window.setTimeout(() => {
+                    state.skillLibraryQuery = next;
+                    state.skillLibraryQueryDebounceTimer = null;
+                  }, 200);
+                },
                 onCategoryChange: (next) => (state.skillLibraryCategory = next),
                 onStatusChange: (next) => (state.skillLibraryStatus = next),
                 onRefresh: async () => {
@@ -2373,6 +2394,7 @@ export function renderApp(state: AppViewState) {
                     state.toolLibraryError = (err as any)?.message ? String((err as any).message) : String(err);
                   } finally {
                     state.toolLibraryLoading = false;
+                    state.toolLibraryReloadVersion = (state.toolLibraryReloadVersion || 0) + 1;
                   }
                 };
 
@@ -2478,7 +2500,15 @@ export function renderApp(state: AppViewState) {
                     state.toolLibraryMcpEditServerKey = state.mcpSelectedKey ?? serverKey;
                   })();
                 },
-                onQueryChange: (next) => (state.toolLibraryQuery = next),
+                onQueryChange: (next) => {
+                  if (state.toolLibraryQueryDebounceTimer) {
+                    window.clearTimeout(state.toolLibraryQueryDebounceTimer);
+                  }
+                  state.toolLibraryQueryDebounceTimer = window.setTimeout(() => {
+                    state.toolLibraryQuery = next;
+                    state.toolLibraryQueryDebounceTimer = null;
+                  }, 200);
+                },
                 onRefresh: async () => {
                     await onRefresh();
                 },
@@ -2543,7 +2573,15 @@ export function renderApp(state: AppViewState) {
                 query: state.tutorialsQuery,
                 selectedCategoryId: state.tutorialsSelectedCategoryId,
                 playingLink: state.tutorialsPlayingLink,
-                onQueryChange: (next) => (state.tutorialsQuery = next),
+                onQueryChange: (next) => {
+                  if (state.tutorialsQueryDebounceTimer) {
+                    window.clearTimeout(state.tutorialsQueryDebounceTimer);
+                  }
+                  state.tutorialsQueryDebounceTimer = window.setTimeout(() => {
+                    state.tutorialsQuery = next;
+                    state.tutorialsQueryDebounceTimer = null;
+                  }, 200);
+                },
                 onSelectCategory: (id) => (state.tutorialsSelectedCategoryId = id),
                 onLessonClick: (link) => {
                   state.tutorialsPlayingLink = link;

@@ -840,6 +840,62 @@
   margin-top: auto;
 }
 
+/* MCP field hint tooltip */
+.mcp-field-hint {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  cursor: help;
+  color: var(--text-muted);
+  transition: color 0.15s ease;
+}
+
+.mcp-field-hint:hover {
+  color: var(--accent);
+}
+
+.mcp-field-hint svg {
+  width: 16px;
+  height: 16px;
+}
+
+.mcp-field-hint__tooltip {
+  display: none;
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 6px;
+  padding: 10px 14px;
+  background: var(--bg-content);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  font-size: 12px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  min-width: 240px;
+  max-width: 320px;
+  z-index: 10;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  color: var(--text-regular);
+  pointer-events: none;
+}
+
+.mcp-field-hint:hover .mcp-field-hint__tooltip {
+  display: block;
+}
+
+.mcp-field-hint__tooltip::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 5px;
+  border-style: solid;
+  border-color: var(--border) transparent transparent transparent;
+}
+
 /* Skills table: 4 columns */
 .skills-table .skills-table-head,
 .skills-table .skills-table-row {

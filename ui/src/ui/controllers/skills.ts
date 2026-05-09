@@ -94,11 +94,42 @@ export function disabledFoldersForMarketItems(
   report: SkillStatusReport | null | undefined,
   items: { folder?: string }[],
 ): Set<string> {
+  if (!report?.skills?.length || !items.length) return new Set<string>();
+
+  // Build lookup indexes once: O(m)
+  const byKey = new Map<string, SkillStatusEntry>();
+  const byBase = new Map<string, SkillStatusEntry[]>();
+  const byName = new Map<string, SkillStatusEntry[]>();
+
+  for (const e of report.skills) {
+    byKey.set(e.skillKey, e);
+
+    const base = (e.baseDir ?? "").replace(/[/\\]+$/, "").split(/[/\\]/).pop() ?? "";
+    if (base) {
+      const arr = byBase.get(base);
+      if (arr) arr.push(e);
+      else byBase.set(base, [e]);
+    }
+
+    if (e.name) {
+      const arr = byName.get(e.name);
+      if (arr) arr.push(e);
+      else byName.set(e.name, [e]);
+    }
+  }
+
+  // O(n) lookups using indexes
   const set = new Set<string>();
   for (const it of items) {
     const folder = (it.folder ?? "").trim();
     if (!folder) continue;
-    if (isMarketSkillDisabled(report, folder)) set.add(folder);
+
+    const entry =
+      byKey.get(folder) ??
+      (byBase.get(folder)?.length === 1 ? byBase.get(folder)![0] : undefined) ??
+      (byName.get(folder)?.length === 1 ? byName.get(folder)![0] : undefined);
+
+    if (entry?.disabled) set.add(folder);
   }
   return set;
 }

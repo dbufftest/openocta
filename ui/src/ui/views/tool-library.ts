@@ -457,10 +457,25 @@ export function renderToolLibrary(props: ToolLibraryProps) {
                               `
                             : html`
                                 <div class="field">
-                                  <span>${t("mcpRawJson")}</span>
+                                  <span style="display: flex; align-items: center; gap: 6px;">
+                                    ${t("mcpRawJson")}
+                                    <span class="mcp-field-hint">
+                                      ${icons.helpCircle}
+                                      <span class="mcp-field-hint__tooltip">JSON 格式示例：
+{
+  "command": "npx",
+  "args": ["-y", "prometheus-mcp-server"],
+  "env": { "API_KEY": "xxx" }
+}
+或 URL 形式：
+{
+  "url": "https://mcp.example.com/sse"
+}</span>
+                                    </span>
+                                  </span>
                                   <span class="textarea"><textarea
                                     style="min-height: 180px; font-family: var(--mono);"
-                                    .value=${props.addRawJson ?? "{}"}
+                                    .value=${props.addRawJson ?? ""}
                                     @input=${(e: Event) =>
                                       props.onAddRawChange?.((e.target as HTMLTextAreaElement).value)}
                                   ></textarea></span>

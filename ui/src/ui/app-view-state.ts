@@ -363,6 +363,8 @@ export type AppViewState = {
   employeeMarketInstalledRemoteIds: Set<string>;
   employeeMarketRemoteToLocal: Record<string, string>;
   employeeMarketInstallingId: string | null;
+  employeeMarketQueryDebounceTimer: number | null;
+  employeeMarketReloadVersion: number;
 
   skillLibraryLoadedOnce: boolean;
   skillLibraryLoading: boolean;
@@ -387,6 +389,8 @@ export type AppViewState = {
   skillLibraryEditError: string | null;
   skillLibraryEditSyntaxError: string | null;
   skillLibraryEditSuccessMessage: string | null;
+  skillLibraryQueryDebounceTimer: number | null;
+  skillLibraryReloadVersion: number;
 
   toolLibraryLoadedOnce: boolean;
   toolLibraryLoading: boolean;
@@ -402,6 +406,8 @@ export type AppViewState = {
   toolLibraryInstallingId: number | null;
   toolLibraryMcpEditModalOpen: boolean;
   toolLibraryMcpEditServerKey: string;
+  toolLibraryQueryDebounceTimer: number | null;
+  toolLibraryReloadVersion: number;
 
   tutorialsLoadedOnce: boolean;
   tutorialsLoading: boolean;
@@ -410,6 +416,7 @@ export type AppViewState = {
   tutorialsQuery: string;
   tutorialsSelectedCategoryId: number | null;
   tutorialsPlayingLink: string | null;
+  tutorialsQueryDebounceTimer: number | null;
   aboutUninstallModalOpen: boolean;
   aboutUninstallMode: "program" | "full";
   aboutUninstallLoading: boolean;

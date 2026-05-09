@@ -17,6 +17,7 @@ export class CategoryTreeSidebar extends LitElement {
   @property({ type: String }) gatewayHost = "";
   @property({ type: String }) token = "";
   @property({ type: Boolean }) disabled = false;
+  @property({ type: Number }) reloadVersion = 0;
 
   @state() private categoryTree: CategoryTreeNode[] = [];
   @state() private expandedIds = new Set<string | number>();
@@ -102,6 +103,12 @@ export class CategoryTreeSidebar extends LitElement {
   connectedCallback() {
     super.connectedCallback();
     this.loadCategories();
+  }
+
+  updated(changedProperties: Map<string, unknown>) {
+    if (changedProperties.has("reloadVersion") && this.reloadVersion > 0) {
+      this.loadCategories();
+    }
   }
 
   private async loadCategories() {

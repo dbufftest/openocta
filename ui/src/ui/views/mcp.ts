@@ -129,12 +129,14 @@ function mcpStdioCommandSelectModel(command: string | undefined): {
   options: readonly string[];
 } {
   const trimmed = (command ?? "").trim();
-  const value = trimmed || "npx";
   const presets = MCP_COMMAND_PRESETS as readonly string[];
-  if (presets.includes(value)) {
-    return { value, options: presets };
+  if (!trimmed) {
+    return { value: "", options: ["", ...presets] };
   }
-  return { value, options: [value, ...presets.filter((p) => p !== value)] };
+  if (presets.includes(trimmed)) {
+    return { value: trimmed, options: presets };
+  }
+  return { value: trimmed, options: [trimmed, ...presets.filter((p) => p !== trimmed)] };
 }
 
 /**
@@ -153,7 +155,7 @@ function renderMcpStdioCommandSelect(
     k,
     html`
       <select @change=${(e: Event) => onPick((e.target as HTMLSelectElement).value)}>
-        ${options.map((c) => html`<option value=${c} ?selected=${c === sel}>${c}</option>`)}
+        ${options.map((c) => html`<option value=${c} ?selected=${c === sel}>${c || "请选择命令类型"}</option>`)}
       </select>
     `,
   );
@@ -187,10 +189,18 @@ export function renderMcpAddConnectionFields(
         /></span>
       </div>
       <div class="field">
-        <span>${t("mcpEnv")}</span>
+        <span style="display: flex; align-items: center; gap: 6px;">
+          ${t("mcpEnv")}
+          <span class="mcp-field-hint">
+            ${icons.helpCircle}
+            <span class="mcp-field-hint__tooltip">每行一个环境变量，格式为 KEY=VALUE
+例如：
+API_KEY=your-api-key
+DEBUG=true</span>
+          </span>
+        </span>
         <span class="textarea"><textarea
           style="min-height: 80px; font-family: var(--mono); font-size: 12px;"
-          placeholder=${t("mcpEnvPlaceholder")}
           .value=${formatEnvForEdit(draft?.env)}
           @input=${(e: Event) => {
             const val = (e.target as HTMLTextAreaElement).value;
@@ -265,10 +275,18 @@ function renderEditConnectionTypeFields(
         /></span>
       </div>
       <div class="field">
-        <span>${t("mcpEnv")}</span>
+        <span style="display: flex; align-items: center; gap: 6px;">
+          ${t("mcpEnv")}
+          <span class="mcp-field-hint">
+            ${icons.helpCircle}
+            <span class="mcp-field-hint__tooltip">每行一个环境变量，格式为 KEY=VALUE
+例如：
+API_KEY=your-api-key
+DEBUG=true</span>
+          </span>
+        </span>
         <span class="textarea"><textarea
           style="min-height: 80px; font-family: var(--mono); font-size: 12px;"
-          placeholder=${t("mcpEnvPlaceholder")}
           .value=${formatEnvForEdit(selected.env)}
           @input=${(e: Event) => {
             const val = (e.target as HTMLTextAreaElement).value;
@@ -432,7 +450,22 @@ export function renderMcpEditModal(props: McpEditModalProps) {
               `
             : html`
                 <div class="field">
-                  <span>${t("mcpRawJson")}</span>
+                  <span style="display: flex; align-items: center; gap: 6px;">
+                    ${t("mcpRawJson")}
+                    <span class="mcp-field-hint">
+                      ${icons.helpCircle}
+                      <span class="mcp-field-hint__tooltip">JSON 格式示例：
+{
+  "command": "npx",
+  "args": ["-y", "prometheus-mcp-server"],
+  "env": { "API_KEY": "xxx" }
+}
+或 URL 形式：
+{
+  "url": "https://mcp.example.com/sse"
+}</span>
+                    </span>
+                  </span>
                   <span class="textarea"><textarea
                     style="min-height: 200px; font-family: var(--mono);"
                     .value=${props.rawJson}
@@ -597,7 +630,22 @@ export function renderMcp(props: McpProps) {
                         `
                       : html`
                           <div class="field">
-                            <span>${t("mcpRawJson")}</span>
+                            <span style="display: flex; align-items: center; gap: 6px;">
+                              ${t("mcpRawJson")}
+                              <span class="mcp-field-hint">
+                                ${icons.helpCircle}
+                                <span class="mcp-field-hint__tooltip">JSON 格式示例：
+{
+  "command": "npx",
+  "args": ["-y", "prometheus-mcp-server"],
+  "env": { "API_KEY": "xxx" }
+}
+或 URL 形式：
+{
+  "url": "https://mcp.example.com/sse"
+}</span>
+                              </span>
+                            </span>
                             <span class="textarea"><textarea
                               style="min-height: 180px; font-family: var(--mono);"
                               .value=${props.addRawJson}
@@ -877,7 +925,22 @@ export function renderMcp(props: McpProps) {
                         `
                       : html`
                           <div class="field">
-                            <span>${t("mcpRawJson")}</span>
+                            <span style="display: flex; align-items: center; gap: 6px;">
+                              ${t("mcpRawJson")}
+                              <span class="mcp-field-hint">
+                                ${icons.helpCircle}
+                                <span class="mcp-field-hint__tooltip">JSON 格式示例：
+{
+  "command": "npx",
+  "args": ["-y", "prometheus-mcp-server"],
+  "env": { "API_KEY": "xxx" }
+}
+或 URL 形式：
+{
+  "url": "https://mcp.example.com/sse"
+}</span>
+                              </span>
+                            </span>
                             <span class="textarea"><textarea
                               style="min-height: 200px; font-family: var(--mono);"
                               .value=${props.rawJson}
