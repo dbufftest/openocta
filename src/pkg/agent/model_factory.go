@@ -31,6 +31,7 @@ var builtInProviders = map[string]builtInProvider{
 	"xai":               {"https://api.x.ai/v1", false, "XAI_API_KEY", "grok-3-mini"},
 	"together":          {"https://api.together.xyz/v1", false, "TOGETHER_API_KEY", "meta-llama/Llama-3.3-70B-Instruct-Turbo"},
 	"venice":            {"https://api.venice.ai/api/v1", false, "VENICE_API_KEY", "falcon-3.1-70b"},
+	"nearai":            {"https://cloud-api.near.ai/v1", false, "NEARAI_API_KEY", "zai-org/GLM-5.1-FP8"},
 	"synthetic":         {"https://api.synthetic.new/anthropic", true, "SYNTHETIC_API_KEY", "hf:MiniMaxAI/MiniMax-M2.1"},
 	"qianfan":           {"https://qianfan.baidubce.com/v2", false, "QIANFAN_API_KEY", "deepseek-v3-2-251201"},
 	"huggingface":       {"https://router.huggingface.co/v1", false, "HUGGINGFACE_HUB_TOKEN", ""},

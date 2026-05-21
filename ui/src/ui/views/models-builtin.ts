@@ -26,6 +26,7 @@ export const BUILTIN_PROVIDERS: BuiltInProvider[] = [
   { id: "xai", label: "xAI (Grok)", envKey: "XAI_API_KEY", defaultModel: "grok-3-mini", baseUrl: "https://api.x.ai/v1", defaultApi: "openai-completions" },
   { id: "together", label: "Together AI", envKey: "TOGETHER_API_KEY", defaultModel: "meta-llama/Llama-3.3-70B-Instruct-Turbo", baseUrl: "https://api.together.xyz/v1", defaultApi: "openai-completions" },
   { id: "venice", label: "Venice AI", envKey: "VENICE_API_KEY", defaultModel: "falcon-3.1-70b", baseUrl: "https://api.venice.ai/api/v1", defaultApi: "openai-completions" },
+  { id: "nearai", label: "NEAR AI Cloud", envKey: "NEARAI_API_KEY", defaultModel: "zai-org/GLM-5.1-FP8", baseUrl: "https://cloud-api.near.ai/v1", defaultApi: "openai-completions" },
   { id: "synthetic", label: "Synthetic", envKey: "SYNTHETIC_API_KEY", defaultModel: "hf:MiniMaxAI/MiniMax-M2.1", baseUrl: "https://api.synthetic.new/anthropic", defaultApi: "anthropic-messages" },
   { id: "qianfan", label: "千帆 (百度)", envKey: "QIANFAN_API_KEY", defaultModel: "deepseek-v3-2-251201", baseUrl: "https://qianfan.baidubce.com/v2", defaultApi: "openai-completions" },
   { id: "huggingface", label: "Hugging Face", envKey: "HUGGINGFACE_HUB_TOKEN", defaultModel: "", baseUrl: "https://router.huggingface.co/v1", defaultApi: "openai-completions" },
@@ -43,9 +44,12 @@ export const BUILTIN_PROVIDERS: BuiltInProvider[] = [
 
 export function parseModelRef(ref: string | null | undefined): { provider: string; modelId: string } | null {
   if (!ref || typeof ref !== "string") return null;
-  const parts = ref.trim().split("/", 2);
-  if (parts.length === 2) return { provider: parts[0].trim(), modelId: parts[1].trim() };
-  return { provider: "anthropic", modelId: ref.trim() };
+  const trimmed = ref.trim();
+  const slashIndex = trimmed.indexOf("/");
+  if (slashIndex >= 0) {
+    return { provider: trimmed.slice(0, slashIndex).trim(), modelId: trimmed.slice(slashIndex + 1).trim() };
+  }
+  return { provider: "anthropic", modelId: trimmed };
 }
 
 export function formatModelRef(provider: string, modelId: string): string {
