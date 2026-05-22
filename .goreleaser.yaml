@@ -19,13 +19,15 @@ snapshot:
 before:
   hooks:
     # 从 git tag 设置版本到 src/.env 和 ui/package.json
-    - ./scripts/set-version.sh
+    - cmd: bash
+      args: ["./scripts/set-version.sh"]
     - cp src/.env src/embed/
     - make ui
     - ls src/embed/
     - cd src && go mod download
     # 可选：macOS + GORELEASER_INCLUDE_DMG=1 时生成 dist-mac/OpenOcta-*-darwin-{arm64,amd64}.dmg
-    - ./scripts/goreleaser-wails-dmg.sh
+    - cmd: bash
+      args: ["./scripts/goreleaser-wails-dmg.sh"]
 
 builds:
   # Linux 服务端二进制（rpm/deb/tar.gz），Windows/macOS 桌面版由 Wails 构建
