@@ -23,7 +23,7 @@ before:
     - cp src/.env src/embed/
     - make ui
     - ls src/embed/
-    - cd src && go mod download
+    - bash -c "cd src && go mod download"
     # 可选：macOS + GORELEASER_INCLUDE_DMG=1 时生成 dist-mac/OpenOcta-*-darwin-{arm64,amd64}.dmg
     - bash ./scripts/goreleaser-wails-dmg.sh
 
