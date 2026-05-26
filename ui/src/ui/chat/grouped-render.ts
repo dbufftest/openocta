@@ -50,6 +50,20 @@ function formatDurationShort(ms: number): string {
   return `${mins}m${secs.toString().padStart(2, "0")}s`;
 }
 
+function groupElapsedMs(group: MessageGroup): number | null {
+  const timestamps = group.messages
+    .map((item) => {
+      const m = item.message as Record<string, unknown>;
+      return typeof m.timestamp === "number" ? m.timestamp : null;
+    })
+    .filter((value): value is number => value !== null);
+  if (timestamps.length < 2) {
+    return null;
+  }
+  const elapsed = Math.max(...timestamps) - Math.min(...timestamps);
+  return elapsed > 0 ? elapsed : null;
+}
+
 function extractImages(message: unknown): ImageBlock[] {
   const m = message as Record<string, unknown>;
   const content = m.content;
@@ -175,17 +189,21 @@ export function renderMessageGroup(
         avatar: opts.assistantAvatar ?? null,
       })}
       <div class="chat-group-messages">
-        ${group.messages.map((item, index) =>
-          renderGroupedMessage(
-            item.message,
-            {
-              isStreaming: group.isStreaming && index === group.messages.length - 1,
-              showReasoning: opts.showReasoning,
-              showToolTrace: opts.showToolTrace,
-            },
-            opts.onOpenSidebar,
-          ),
-        )}
+        ${
+          normalizedRole === "assistant"
+            ? renderAssistantTurnMessages(group, opts)
+            : group.messages.map((item, index) =>
+                renderGroupedMessage(
+                  item.message,
+                  {
+                    isStreaming: group.isStreaming && index === group.messages.length - 1,
+                    showReasoning: opts.showReasoning,
+                    showToolTrace: opts.showToolTrace,
+                  },
+                  opts.onOpenSidebar,
+                ),
+              )
+        }
         <div class="chat-group-footer">
           <span class="chat-sender-name">${who}</span>
           <span class="chat-group-timestamp">${timestamp}</span>
@@ -397,6 +415,205 @@ function renderInlineToolCall(card: ToolCard) {
         <span class="chat-tool-run__status">${icons.check}</span>
       </div>
     </div>
+  `;
+}
+
+type ToolRunEntry = {
+  command: string;
+  tool: string;
+  output: string;
+  success: boolean;
+};
+
+function isToolResultLikeMessage(message: unknown): boolean {
+  const m = message as Record<string, unknown>;
+  const role = typeof m.role === "string" ? m.role.toLowerCase() : "";
+  return (
+    isToolResultMessage(message) ||
+    role === "toolresult" ||
+    role === "tool_result" ||
+    typeof m.toolCallId === "string" ||
+    typeof m.tool_call_id === "string"
+  );
+}
+
+function inferToolSuccess(output: string): boolean {
+  const normalized = output.toLowerCase();
+  return !/(^|\n)\s*(error|failed|failure):|exit code:\s*[1-9]|exception|traceback/.test(
+    normalized,
+  );
+}
+
+function collectAssistantTurn(group: MessageGroup) {
+  const runs: ToolRunEntry[] = [];
+  const processText: string[] = [];
+  let finalMessage: unknown | null = null;
+  let currentRun: ToolRunEntry | null = null;
+
+  for (const item of group.messages) {
+    const message = item.message;
+    const m = message as Record<string, unknown>;
+    const role = typeof m.role === "string" ? m.role : "";
+    const cards = extractToolCards(message);
+    const text = extractTextCached(message)?.trim() ?? "";
+    const isToolResult = isToolResultLikeMessage(message);
+    const callCards = cards.filter((card) => card.kind === "call");
+
+    if (callCards.length > 0) {
+      for (const card of callCards) {
+        currentRun = {
+          command: toolCommandText(card),
+          tool: card.name || "tool",
+          output: "",
+          success: true,
+        };
+        runs.push(currentRun);
+      }
+      if (text) {
+        processText.push(text);
+      }
+      continue;
+    }
+
+    if (isToolResult) {
+      const output = text ? extractToolOutputText(text) : "";
+      if (currentRun) {
+        currentRun.output = output;
+        currentRun.success = inferToolSuccess(output);
+      } else {
+        runs.push({
+          command: "command",
+          tool: cards[0]?.name || "tool",
+          output,
+          success: inferToolSuccess(output),
+        });
+      }
+      continue;
+    }
+
+    if (role.toLowerCase() === "assistant" && text) {
+      finalMessage = message;
+      if (runs.length > 0) {
+        processText.push(text);
+      }
+    }
+  }
+
+  return { runs, processText, finalMessage };
+}
+
+function renderAssistantToolSummary(group: MessageGroup) {
+  const { runs, processText } = collectAssistantTurn(group);
+  if (runs.length === 0) {
+    return nothing;
+  }
+  const durationMs =
+    extractDurationMs(group.messages[group.messages.length - 1]?.message) ?? groupElapsedMs(group);
+  const durationLabel = durationMs ? formatDurationShort(durationMs) : "";
+  const toolCount = new Set(runs.map((run) => run.tool).filter(Boolean)).size || runs.length;
+  const successCount = runs.filter((run) => run.success).length;
+
+  return html`
+    <details class="chat-turn-tools">
+      <summary class="chat-turn-tools__summary">
+        <span>已处理 ${durationLabel || "-"}</span>
+        <span class="chat-turn-tools__chevron">${icons.chevronRight}</span>
+      </summary>
+      <div class="chat-turn-tools__body">
+        <details class="chat-turn-tools__section">
+          <summary class="chat-turn-tools__section-summary">
+            <span>已运行 ${runs.length} 条命令 · 使用 ${toolCount} 个 tools</span>
+            <span class="chat-turn-tools__chevron">${icons.chevronRight}</span>
+          </summary>
+          ${
+            processText.length > 0
+              ? html`<div class="chat-turn-tools__process">
+                  ${processText.map((line) => html`<div>${line}</div>`)}
+                </div>`
+              : nothing
+          }
+          <details class="chat-turn-tools__section">
+            <summary class="chat-turn-tools__section-summary">
+              <span>命令列表 · 成功 ${successCount}/${runs.length}</span>
+              <span class="chat-turn-tools__chevron">${icons.chevronRight}</span>
+            </summary>
+            <div class="chat-turn-tools__list">
+              ${runs.map(
+                (run) => html`
+                  <details class="chat-turn-command">
+                    <summary class="chat-turn-command__summary">
+                      <span class="chat-turn-command__text">已运行 ${run.command || run.tool}</span>
+                      <span class="chat-turn-command__status ${run.success ? "success" : "failed"}">
+                        ${run.success ? "成功" : "失败"}
+                      </span>
+                    </summary>
+                    <div class="chat-tool-run__panel">
+                      <div class="chat-tool-run__panel-title">Shell</div>
+                      <pre class="chat-tool-run__output">${run.output || "(no output)"}</pre>
+                    </div>
+                  </details>
+                `,
+              )}
+            </div>
+          </details>
+        </details>
+      </div>
+    </details>
+  `;
+}
+
+function renderAssistantTurnMessages(
+  group: MessageGroup,
+  opts: {
+    onOpenSidebar?: (content: string) => void;
+    showReasoning: boolean;
+    showToolTrace: boolean;
+  },
+) {
+  if (!opts.showToolTrace) {
+    return group.messages.map((item, index) =>
+      renderGroupedMessage(
+        item.message,
+        {
+          isStreaming: group.isStreaming && index === group.messages.length - 1,
+          showReasoning: opts.showReasoning,
+          showToolTrace: opts.showToolTrace,
+        },
+        opts.onOpenSidebar,
+      ),
+    );
+  }
+
+  const turn = collectAssistantTurn(group);
+  if (turn.runs.length === 0) {
+    return group.messages.map((item, index) =>
+      renderGroupedMessage(
+        item.message,
+        {
+          isStreaming: group.isStreaming && index === group.messages.length - 1,
+          showReasoning: opts.showReasoning,
+          showToolTrace: opts.showToolTrace,
+        },
+        opts.onOpenSidebar,
+      ),
+    );
+  }
+
+  return html`
+    ${renderAssistantToolSummary(group)}
+    ${
+      turn.finalMessage
+        ? renderGroupedMessage(
+            turn.finalMessage,
+            {
+              isStreaming: group.isStreaming,
+              showReasoning: opts.showReasoning,
+              showToolTrace: false,
+            },
+            opts.onOpenSidebar,
+          )
+        : nothing
+    }
   `;
 }
 
