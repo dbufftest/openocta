@@ -43,6 +43,7 @@ type ContentBlock struct {
 	Type     string `json:"type"`
 	Text     string `json:"text,omitempty"`
 	Name     string `json:"name,omitempty"`
+	ID       string `json:"id,omitempty"`
 	MimeType string `json:"mimeType,omitempty"`
 	Data     string `json:"data,omitempty"`
 	IsError  bool   `json:"is_error,omitempty"`

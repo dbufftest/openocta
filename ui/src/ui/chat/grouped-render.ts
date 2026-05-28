@@ -13,8 +13,6 @@ import {
 import { isToolResultMessage, normalizeRoleForGrouping } from "./message-normalizer.ts";
 import { extractToolCards } from "./tool-cards.ts";
 import { resolveToolDisplay } from "../tool-display.ts";
-import "../components/thinking-timer.ts";
-
 
 type ImageBlock = {
   url: string;
@@ -146,7 +144,7 @@ export function renderReadingIndicatorGroup(assistant?: AssistantIdentity, start
           <span class="chat-reading-indicator__dots">
             <span></span><span></span><span></span>
           </span>
-          ${startedAt ? html`<thinking-timer .start=${startedAt}></thinking-timer>` : nothing}
+          思考中...
         </div>
       </div>
     </div>
@@ -175,13 +173,12 @@ export function renderStreamingGroup(
             content: [{ type: "text", text }],
             timestamp: startedAt,
           },
-          { isStreaming: true, showReasoning: false, showToolTrace: true },
+          { isStreaming: true, showReasoning: false, showToolTrace: false },
           onOpenSidebar,
         )}
         <div class="chat-group-footer">
           <span class="chat-sender-name">${name}</span>
           <span class="chat-group-timestamp">${timestamp}</span>
-          <span class="chat-group-duration muted" style="margin-left: 8px;"><thinking-timer .start=${startedAt}></thinking-timer></span>
         </div>
       </div>
     </div>
@@ -214,47 +211,7 @@ export function renderMessageGroup(
     hour: "numeric",
     minute: "2-digit",
   });
-  const metrics = normalizedRole === "assistant" 
-    ? extractGroupMetrics(group) 
-    : { thinkingMs: null, elapsedMs: null, firstTokenMs: null, toolDurationMs: null, outputDurationMs: null };
-  const durationLabel = metrics.elapsedMs ? formatDurationShort(metrics.elapsedMs) : "";
-  const thinkingLabel = metrics.thinkingMs ? formatDurationShort(metrics.thinkingMs) : "";
-  
-  let detailedLabel = "";
-  // Only show duration stats when streaming is complete (all tool results returned)
-  if (metrics.elapsedMs && !group.isStreaming) {
-    let mainLabel = `总耗时 ${durationLabel}`;
-    const detailParts: string[] = [];
-
-    // Calculate firstTokenToOutputMs (首token到结果输出)
-    if (metrics.firstTokenMs !== null) {
-      const firstTokenToOutputVal = metrics.elapsedMs - (metrics.toolDurationMs ?? 0) - metrics.firstTokenMs;
-      if (firstTokenToOutputVal > 0) {
-        detailParts.push(`首token到结果输出 ${formatDurationShort(firstTokenToOutputVal)}`);
-      }
-    }
-
-    if (metrics.toolDurationMs !== null && metrics.toolDurationMs > 0) {
-      detailParts.push(`tool工具 ${formatDurationShort(metrics.toolDurationMs)}`);
-    }
-
-    if (metrics.outputDurationMs !== null && metrics.outputDurationMs > 0) {
-      detailParts.push(`输出 ${formatDurationShort(metrics.outputDurationMs)}`);
-    }
-
-    if (detailParts.length > 0) {
-      detailedLabel = `${mainLabel} (${detailParts.join(" · ")})`;
-    } else {
-      detailedLabel = mainLabel;
-    }
-  }
-
-  const footerMsLabel = group.isStreaming
-    ? html`<thinking-timer .start=${group.timestamp}></thinking-timer>`
-    : [
-        thinkingLabel ? `思考 ${thinkingLabel}` : "",
-        detailedLabel
-      ].filter(Boolean).join(" · ");
+  const footerMsLabel = "";
 
   return html`
     <div class="chat-group ${roleClass}">
@@ -663,7 +620,6 @@ function extractGroupMetrics(group: MessageGroup) {
 function renderToolSegment(
   runs: ToolRunEntry[],
   isStreaming: boolean,
-  metrics: { thinkingMs: number | null; elapsedMs: number | null; [key: string]: any }
 ) {
   const groupsMap = new Map<string, ToolGroup>();
   for (const run of runs) {
@@ -689,25 +645,13 @@ function renderToolSegment(
         const successCount = tg.runs.filter((r) => r.success).length;
         const failedCount = total - successCount;
 
-        const groupDuration = tg.runs.reduce((sum, r) => sum + (r.durationMs || 0), 0);
-        const groupDurationLabel = groupDuration > 0 ? formatDurationShort(groupDuration) : "";
-        const thinkingLabel = metrics.thinkingMs ? formatDurationShort(metrics.thinkingMs) : "";
-
         let statsLabel = "";
         if (isStreaming) {
           statsLabel = "正在运行...";
         } else {
-          const base = failedCount > 0 
+          statsLabel = failedCount > 0
             ? `运行 ${total} 次 · 成功 ${successCount} 失败 ${failedCount}`
             : `运行 ${total} 次 · 全部成功`;
-          const parts = [base];
-          if (groupDurationLabel) {
-            parts.push(`耗时 ${groupDurationLabel}`);
-          }
-          if (thinkingLabel) {
-            parts.push(`思考 ${thinkingLabel}`);
-          }
-          statsLabel = parts.join(" · ");
         }
 
         const chevronIcon = isStreaming ? icons.loader : icons.chevronRight;
@@ -734,7 +678,6 @@ function renderToolSegment(
                       <span class="chat-turn-command__prompt">$</span>
                       <span class="chat-turn-command__text">
                         ${run.command || run.tool}
-                        ${run.durationMs ? html`<span class="chat-turn-command__duration muted"> (${formatDurationShort(run.durationMs)})</span>` : nothing}
                       </span>
                       <span class="chat-turn-command__status-dot ${run.success ? "success" : "failed"}"></span>
                     </summary>
@@ -763,8 +706,6 @@ function renderAssistantTurnMessages(
     return nothing;
   }
 
-  const metrics = extractGroupMetrics(group);
-
   // Find the last segment that is a text segment and contains actual text (the final assistant response)
   let finalResponseIdx = -1;
   for (let i = segments.length - 1; i >= 0; i--) {
@@ -788,8 +729,6 @@ function renderAssistantTurnMessages(
     processSegments = segments;
   }
 
-  const elapsedLabel = metrics.elapsedMs ? formatDurationShort(metrics.elapsedMs) : "";
-
   return html`
     ${processSegments.length > 0
       ? html`
@@ -797,7 +736,6 @@ function renderAssistantTurnMessages(
             <summary class="chat-process-summary">
               <span class="chat-process-summary__icon">${icons.wrench}</span>
               <span class="chat-process-summary__title">思考及工具运行过程</span>
-              ${elapsedLabel && !group.isStreaming ? html`<span class="chat-process-summary__duration">总耗时 ${elapsedLabel}</span>` : nothing}
               <span class="chat-process-summary__chevron">${icons.chevronRight}</span>
             </summary>
             <div class="chat-process-content">
@@ -813,7 +751,7 @@ function renderAssistantTurnMessages(
                     opts.onOpenSidebar,
                   );
                 } else {
-                  return renderToolSegment(seg.runs, !!group.isStreaming, metrics);
+                  return renderToolSegment(seg.runs, !!group.isStreaming);
                 }
               })}
             </div>
@@ -922,8 +860,6 @@ function renderGroupedMessage(
     opts.showReasoning && role === "assistant" ? extractThinkingCached(message) : null;
   const markdownBase = extractedText?.trim() ? extractedText : null;
   const reasoningMarkdown = extractedThinking ? formatReasoningMarkdown(extractedThinking) : null;
-  const durationMs = role === "assistant" ? extractDurationMs(message) : null;
-  const durationLabel = durationMs ? formatDurationShort(durationMs) : "";
   const markdown = markdownBase;
   const canCopyMarkdown = role === "assistant" && Boolean(markdown?.trim());
 
@@ -960,7 +896,7 @@ function renderGroupedMessage(
           ? html`
               <details class="chat-thinking">
                 <summary class="chat-thinking__summary">
-                  思考过程${durationLabel ? html`<span class="muted"> · ${durationLabel}</span>` : nothing}
+                  思考过程
                 </summary>
                 <div class="chat-thinking__content">
                   ${unsafeHTML(toSanitizedMarkdownHtml(reasoningMarkdown))}

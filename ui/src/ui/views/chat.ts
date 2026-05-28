@@ -283,8 +283,8 @@ export function renderChat(props: ChatProps) {
   const activeSession = props.sessions?.sessions?.find((row) => row.key === props.sessionKey);
   const reasoningLevel = activeSession?.reasoningLevel ?? "off";
   const showReasoning = props.showThinking && reasoningLevel !== "off";
-  const conversationOnly = false;
-  const showToolTrace = true;
+  const conversationOnly = true;
+  const showToolTrace = false;
   const assistantIdentity = {
     name: props.assistantName,
     avatar: props.assistantAvatar ?? props.assistantAvatarUrl ?? null,
@@ -650,11 +650,14 @@ function groupMessages(items: ChatItem[], hasActiveRun = false, hasStream = fals
   }
 
   // Mark the last assistant group as streaming when a run is active
-  // or when stream content is still being rendered.
+  // and no separate stream/reading-indicator item is present.
+  // When hasStream is true, the current streaming content is rendered
+  // separately via renderStreamingGroup/renderReadingIndicatorGroup,
+  // so historical assistant groups should NOT be marked streaming.
   // Only the most recent assistant group should be marked streaming;
   // historical groups remain collapsed so earlier unfinished turns
   // don't forcibly expand their process details on new user messages.
-  if (hasActiveRun || hasStream) {
+  if (hasActiveRun && !hasStream) {
     let foundLastAssistant = false;
     for (let i = result.length - 1; i >= 0; i--) {
       const g = result[i];

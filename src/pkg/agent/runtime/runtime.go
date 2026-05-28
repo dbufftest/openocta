@@ -8,6 +8,7 @@ import (
 	"github.com/tencent-connect/botgo/log"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"time"
 
@@ -200,6 +201,11 @@ func New(ctx context.Context, opts Options) (*Runtime, error) {
 		// Ask for Bash tool calls by default; approvals are persisted and can whitelist sessions via TTL.
 		if !containsRule(apiOpts.SettingsOverrides.Permissions.Ask, "bash") {
 			apiOpts.SettingsOverrides.Permissions.Ask = append(apiOpts.SettingsOverrides.Permissions.Ask, "bash")
+		}
+		// Allow windows_exec_cmd on Windows to prevent missing tool response messages.
+		// This tool should execute directly without requiring user confirmation.
+		if runtime.GOOS == "windows" && !containsRule(apiOpts.SettingsOverrides.Permissions.Allow, "windows_exec_cmd") {
+			apiOpts.SettingsOverrides.Permissions.Allow = append(apiOpts.SettingsOverrides.Permissions.Allow, "windows_exec_cmd")
 		}
 
 		// Write approval queue config to ~/.openocta/workspace/.claude/settings.json.
@@ -713,4 +719,17 @@ func removeApprovalQueueSettings(env func(string) string) error {
 	}
 
 	return nil
+}
+
+// newBrowserDedupMiddleware returns a middleware that prevents the LLM from
+// repeatedly opening the same URL within a short window during multi-step
+// UI automation. This is a stub implementation; the full deduplication logic
+// can be added later if needed.
+func newBrowserDedupMiddleware(windowMs int) middleware.Middleware {
+	return middleware.Funcs{
+		Identifier: "browser-dedup",
+		OnBeforeTool: func(_ context.Context, st *middleware.State) error {
+			return nil
+		},
+	}
 }

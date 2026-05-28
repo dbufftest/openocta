@@ -189,7 +189,9 @@ export function connectGateway(host: GatewayHost) {
     },
     onEvent: (evt) => handleGatewayEvent(host, evt),
     onGap: ({ expected, received }) => {
-      host.lastError = `event gap detected (expected seq ${expected}, got ${received}); refresh recommended`;
+      // Sequence gap is expected when client is a slow consumer or reconnects.
+      // Log warning but don't show as error to avoid alarming users.
+      console.warn(`[gateway] event gap detected (expected seq ${expected}, got ${received})`);
     },
   });
   host.client.start();

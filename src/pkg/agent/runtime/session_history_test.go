@@ -40,21 +40,28 @@ func TestDecodeSessionHistoryWrapped(t *testing.T) {
 func TestTranscriptMessagesToSDK(t *testing.T) {
 	in := []session.TranscriptMessage{
 		{Role: "user", Content: []session.ContentBlock{{Type: "text", Text: "u1"}}},
+		{Role: "assistant", Content: []session.ContentBlock{
+			{Type: "text", Text: "thinking..."},
+			{Type: "toolCall", ID: "tc1", Name: "bash"},
+		}},
 		{Role: "toolResult", ToolCallID: "tc1", ToolName: "bash", Content: []session.ContentBlock{{Type: "text", Text: "x"}}},
 		{Role: "assistant", Content: []session.ContentBlock{{Type: "text", Text: "a1"}}},
 	}
 	got := transcriptMessagesToSDK(in)
-	if len(got) != 3 {
-		t.Fatalf("expected 3 messages, got %d", len(got))
+	if len(got) != 4 {
+		t.Fatalf("expected 4 messages, got %d", len(got))
 	}
 	if got[0].Content != "u1" || got[0].Role != "user" {
 		t.Fatalf("expected user message with content u1, got %+v", got[0])
 	}
-	if got[1].Role != "assistant" || len(got[1].ToolCalls) != 1 || got[1].ToolCalls[0].Name != "bash" || got[1].ToolCalls[0].Result != "x" {
-		t.Fatalf("expected assistant message with tool call, got %+v", got[1])
+	if got[1].Role != "assistant" || len(got[1].ToolCalls) != 1 || got[1].ToolCalls[0].ID != "tc1" || got[1].ToolCalls[0].Name != "bash" {
+		t.Fatalf("expected assistant message with tool call tc1, got %+v", got[1])
 	}
-	if got[2].Role != "assistant" || got[2].Content != "a1" {
-		t.Fatalf("expected assistant message with content a1, got %+v", got[2])
+	if got[2].Role != "tool" || len(got[2].ToolCalls) != 1 || got[2].ToolCalls[0].ID != "tc1" || got[2].ToolCalls[0].Name != "bash" || got[2].ToolCalls[0].Result != "x" {
+		t.Fatalf("expected tool message with tool call id tc1, got %+v", got[2])
+	}
+	if got[3].Role != "assistant" || got[3].Content != "a1" {
+		t.Fatalf("expected assistant message with content a1, got %+v", got[3])
 	}
 }
 

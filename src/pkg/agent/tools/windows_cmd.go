@@ -12,6 +12,34 @@ import (
 	"github.com/stellarlinkco/agentsdk-go/pkg/tool"
 )
 
+// isInteractiveCommand checks if a command is likely to hang waiting for stdin.
+func isInteractiveCommand(cmdStr string) bool {
+	trimmed := strings.TrimSpace(strings.ToLower(cmdStr))
+	parts := strings.Fields(trimmed)
+	if len(parts) == 0 {
+		return false
+	}
+	cmd := parts[0]
+	if idx := strings.LastIndex(cmd, "/"); idx >= 0 {
+		cmd = cmd[idx+1:]
+	}
+	if idx := strings.LastIndex(cmd, "\\"); idx >= 0 {
+		cmd = cmd[idx+1:]
+	}
+	interactiveCmds := []string{
+		"ssh", "scp", "sftp",
+		"mysql", "psql", "redis-cli", "mongo", "mongosh",
+		"telnet", "ftp", "nc", "netcat",
+		"less", "more", "vi", "vim", "nano",
+	}
+	for _, ic := range interactiveCmds {
+		if cmd == ic {
+			return true
+		}
+	}
+	return false
+}
+
 // WindowsCmdTool executes shell commands on Windows via PowerShell (preferred)
 // or cmd (fallback). PowerShell provides broad cross-platform command compatibility.
 // Only available when the agent runs on Windows.
@@ -60,6 +88,14 @@ func (t WindowsCmdTool) Execute(ctx context.Context, params map[string]interface
 	cmdStr = strings.TrimSpace(cmdStr)
 	if cmdStr == "" {
 		return &tool.ToolResult{Success: false, Output: "command is required"}, nil
+	}
+
+	// Detect interactive commands that will hang waiting for stdin
+	if isInteractiveCommand(cmdStr) {
+		return &tool.ToolResult{
+			Success: false,
+			Output:  "Interactive command detected. Commands like 'ssh', 'mysql', 'redis-cli' require interactive input and will hang. Use non-interactive alternatives: ssh with sshpass or SSH keys, mysql with -e flag, etc.",
+		}, nil
 	}
 
 	// Parse optional timeout parameter
@@ -132,6 +168,7 @@ func (t WindowsCmdTool) Execute(ctx context.Context, params map[string]interface
 
 func resolvePreferredWindowsShell(command string) (exe string, argv []string, name string) {
 	// 优先使用 PowerShell（Windows 内置，兼容大多数 Unix 命令别名）
+	// 不使用 -WindowStyle Hidden，由 SysProcAttr.HideWindow 控制窗口隐藏
 	if ps := findPowerShell(); ps != "" {
 		return ps, []string{"-NoProfile", "-Command", command}, "powershell"
 	}

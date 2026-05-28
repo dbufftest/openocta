@@ -3,9 +3,11 @@ package runtime
 
 import (
 	"context"
+	"runtime"
 
 	"github.com/stellarlinkco/agentsdk-go/pkg/tool"
 	toolbuiltin "github.com/stellarlinkco/agentsdk-go/pkg/tool/builtin"
+	"github.com/openocta/openocta/pkg/agent/tools"
 )
 
 // BuiltinTools returns built-in tools from agentsdk-go v2, rooted at projectRoot.
@@ -15,14 +17,24 @@ func BuiltinTools(projectRoot string, sandboxDisabled bool) []tool.Tool {
 	if projectRoot == "" {
 		projectRoot = "."
 	}
-	bash := toolbuiltin.NewBashToolWithRoot(projectRoot)
+
+	// Use custom bash tool on Windows to avoid window flashing
+	var bash tool.Tool
+	if isWindows() {
+		bash = &tools.CustomBashTool{}
+	} else {
+		bash = toolbuiltin.NewBashToolWithRoot(projectRoot)
+	}
+
 	read := toolbuiltin.NewReadToolWithRoot(projectRoot)
 	write := toolbuiltin.NewWriteToolWithRoot(projectRoot)
 	edit := toolbuiltin.NewEditToolWithRoot(projectRoot)
 	grep := toolbuiltin.NewGrepToolWithRoot(projectRoot)
 	glob := toolbuiltin.NewGlobToolWithRoot(projectRoot)
 	if sandboxDisabled {
-		bash = toolbuiltin.NewBashToolWithSandbox(projectRoot, nil)
+		if !isWindows() {
+			bash = toolbuiltin.NewBashToolWithSandbox(projectRoot, nil)
+		}
 		read = toolbuiltin.NewReadToolWithSandbox(projectRoot, nil)
 		write = toolbuiltin.NewWriteToolWithSandbox(projectRoot, nil)
 		edit = toolbuiltin.NewEditToolWithSandbox(projectRoot, nil)
@@ -40,6 +52,10 @@ func BuiltinTools(projectRoot string, sandboxDisabled bool) []tool.Tool {
 		grep,
 		glob,
 	}
+}
+
+func isWindows() bool {
+	return runtime.GOOS == "windows"
 }
 
 type compatTool struct {
