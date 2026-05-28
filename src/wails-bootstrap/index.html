@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>OpenOcta</title>
+  <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval'; connect-src *;">
   <style>
     body { font-family: system-ui, sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; background: #1a1a2e; }
     .loading { text-align: center; color: #888; }
@@ -25,30 +26,22 @@
   <script>
     (function() {
       var url = 'http://127.0.0.1:18900?_shell=d';
-      var maxAttempts = 60;
+      var maxAttempts = 120;
       var attempt = 0;
       function tryNavigate() {
         attempt++;
-        var xhr = new XMLHttpRequest();
-        xhr.open('GET', url, true);
-        xhr.onreadystatechange = function() {
-          if (xhr.readyState === 4) {
-            if (xhr.status >= 200 && xhr.status < 400) {
-              window.location.replace(url);
-            } else if (attempt < maxAttempts) {
+        fetch(url, { method: 'GET', mode: 'no-cors' })
+          .then(function() {
+            window.location.href = url;
+          })
+          .catch(function() {
+            if (attempt < maxAttempts) {
               setTimeout(tryNavigate, 500);
             } else {
               document.querySelector('.loading').innerHTML =
                 '<p style="color:#e74c3c">启动超时，请访问 <a href="' + url + '" style="color:#6366f1">' + url + '</a></p>';
             }
-          }
-        };
-        xhr.onerror = function() {
-          if (attempt < maxAttempts) {
-            setTimeout(tryNavigate, 500);
-          }
-        };
-        xhr.send();
+          });
       }
       tryNavigate();
     })();
