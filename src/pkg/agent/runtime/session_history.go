@@ -270,9 +270,12 @@ func transcriptMessagesToSDK(msgs []session.TranscriptMessage) []message.Message
 				}
 			}
 			msg := message.Message{
-				Role:       "tool",
-				ToolCallID: m.ToolCallID,
-				Content:    resultText,
+				Role: "assistant",
+				ToolCalls: []message.ToolCall{{
+					ID:     m.ToolCallID,
+					Name:   m.ToolName,
+					Result: resultText,
+				}},
 			}
 			out = append(out, msg)
 			continue
