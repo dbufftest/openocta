@@ -1,0 +1,62 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - generic [ref=e4]:
+      - img "OpenOcta" [ref=e6]
+      - generic [ref=e7]:
+        - generic [ref=e8]:
+          - heading "IT作业新范式" [level=1] [ref=e9]
+          - paragraph [ref=e10]: 开箱即用的 AI 作业平台，开启智能工作新体验
+        - generic [ref=e11]:
+          - generic [ref=e12]:
+            - img [ref=e14]
+            - generic [ref=e16]:
+              - heading "高效作业" [level=3] [ref=e17]
+              - paragraph [ref=e18]: 听的懂人话、能下地干活，效率翻倍
+          - generic [ref=e19]:
+            - img [ref=e21]
+            - generic [ref=e23]:
+              - heading "安全可控" [level=3] [ref=e24]
+              - paragraph [ref=e25]: 企业级安全防护，保障您的资产安全
+          - generic [ref=e26]:
+            - img [ref=e28]
+            - generic [ref=e31]:
+              - heading "省时省力" [level=3] [ref=e32]
+              - paragraph [ref=e33]: 24小时全天候在线，各类任务均可承接
+      - paragraph [ref=e35]: ©2017-2026 杭州乘云数字技术有限公司 版权所有. 保留一切权利.
+    - generic [ref=e37]:
+      - generic [ref=e38]:
+        - generic [ref=e39]:
+          - generic [ref=e40]: 登录OpenOcta
+          - generic [ref=e41]: 使用账号密码登录
+        - generic [ref=e42]:
+          - generic [ref=e43]:
+            - button "账号密码" [ref=e44]
+            - button "企业SSO" [ref=e45]
+          - generic [ref=e46]:
+            - generic [ref=e47]:
+              - generic [ref=e48]: 用户名 / 邮箱
+              - generic [ref=e49]:
+                - img [ref=e50]
+                - textbox "用户名 / 邮箱" [ref=e53]:
+                  - /placeholder: 例如：admin 或 user@company.com
+            - generic [ref=e54]:
+              - generic [ref=e56]: 密码
+              - generic [ref=e57]:
+                - img [ref=e58]
+                - textbox "密码" [ref=e61]:
+                  - /placeholder: 输入密码
+                - button [ref=e62]:
+                  - img
+            - generic [ref=e63]:
+              - checkbox "记住我的登录状态" [checked] [ref=e64]:
+                - generic:
+                  - img
+              - checkbox [checked]
+              - generic [ref=e65] [cursor=pointer]: 记住我的登录状态
+            - button "登录" [ref=e66]:
+              - text: 登录
+              - img
+      - paragraph [ref=e68]: 登录即表示您同意我们的版权声明和隐私政策
+  - region "Notifications (F8)":
+    - list
+  - alert [ref=e3]
