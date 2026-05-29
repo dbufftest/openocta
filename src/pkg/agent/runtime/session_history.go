@@ -270,13 +270,16 @@ func transcriptMessagesToSDK(msgs []session.TranscriptMessage) []message.Message
 					break
 				}
 			}
-			msg := message.Message{
-				Role: "assistant",
-				ToolCalls: []message.ToolCall{{
-					ID:     m.ToolCallID,
-					Name:   m.ToolName,
-					Result: resultText,
-				}},
+			id := strings.TrimSpace(m.ToolCallID)
+			if id != "" {
+				toolResultsByID[id] = message.Message{
+					Role: "tool",
+					ToolCalls: []message.ToolCall{{
+						ID:     id,
+						Name:   m.ToolName,
+						Result: resultText,
+					}},
+				}
 			}
 			continue
 		}

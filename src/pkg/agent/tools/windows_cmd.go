@@ -12,6 +12,34 @@ import (
 	"github.com/stellarlinkco/agentsdk-go/pkg/tool"
 )
 
+// isInteractiveCommand checks if a command is likely to hang waiting for stdin.
+func isInteractiveCommand(cmdStr string) bool {
+	trimmed := strings.TrimSpace(strings.ToLower(cmdStr))
+	parts := strings.Fields(trimmed)
+	if len(parts) == 0 {
+		return false
+	}
+	cmd := parts[0]
+	if idx := strings.LastIndex(cmd, "/"); idx >= 0 {
+		cmd = cmd[idx+1:]
+	}
+	if idx := strings.LastIndex(cmd, "\\"); idx >= 0 {
+		cmd = cmd[idx+1:]
+	}
+	interactiveCmds := []string{
+		"ssh", "scp", "sftp",
+		"mysql", "psql", "redis-cli", "mongo", "mongosh",
+		"telnet", "ftp", "nc", "netcat",
+		"less", "more", "vi", "vim", "nano",
+	}
+	for _, ic := range interactiveCmds {
+		if cmd == ic {
+			return true
+		}
+	}
+	return false
+}
+
 // WindowsCmdTool executes shell commands on Windows via PowerShell (preferred)
 // or cmd (fallback). PowerShell provides broad cross-platform command compatibility.
 // Only available when the agent runs on Windows.
