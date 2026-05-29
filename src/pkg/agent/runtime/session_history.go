@@ -255,13 +255,14 @@ func persistedToMessages(in []persistedMessage) ([]message.Message, error) {
 }
 
 func transcriptMessagesToSDK(msgs []session.TranscriptMessage) []message.Message {
-	var out []message.Message
+	// First pass: collect tool results by toolCallId for reordering.
+	// Transcript writes toolResult before assistant message (event order),
+	// but API requires assistant with tool_calls followed by tool messages.
+	toolResultsByID := make(map[string]message.Message)
+	var nonToolResults []session.TranscriptMessage
 	for _, m := range msgs {
 		role := strings.ToLower(strings.TrimSpace(m.Role))
 		if role == "toolresult" {
-			// Convert toolResult to a tool-role message with the result content.
-			// Kimi API requires: assistant message with tool_calls must be followed
-			// by tool messages responding to each tool_call_id.
 			var resultText string
 			for _, c := range m.Content {
 				if strings.EqualFold(c.Type, "text") {
@@ -269,19 +270,25 @@ func transcriptMessagesToSDK(msgs []session.TranscriptMessage) []message.Message
 					break
 				}
 			}
-			// Use ToolCalls field with Result for tool result messages.
-			// The agentsdk-go will convert this to the appropriate format for the API.
-			msg := message.Message{
-				Role: "tool",
-				ToolCalls: []message.ToolCall{{
-					ID:     m.ToolCallID,
-					Name:   m.ToolName,
-					Result: resultText,
-				}},
+			id := strings.TrimSpace(m.ToolCallID)
+			if id != "" {
+				toolResultsByID[id] = message.Message{
+					Role: "tool",
+					ToolCalls: []message.ToolCall{{
+						ID:     id,
+						Name:   m.ToolName,
+						Result: resultText,
+					}},
+				}
 			}
-			out = append(out, msg)
 			continue
 		}
+		nonToolResults = append(nonToolResults, m)
+	}
+
+	var out []message.Message
+	for _, m := range nonToolResults {
+		role := strings.ToLower(strings.TrimSpace(m.Role))
 		if role != "user" && role != "assistant" {
 			continue
 		}
@@ -302,7 +309,6 @@ func transcriptMessagesToSDK(msgs []session.TranscriptMessage) []message.Message
 					Data:      c.Data,
 				})
 			} else if strings.EqualFold(c.Type, "toolCall") || strings.EqualFold(c.Type, "tool_call") || strings.EqualFold(c.Type, "tool_use") {
-				// Extract tool call from transcript content block for assistant messages.
 				id := strings.TrimSpace(c.ID)
 				name := strings.TrimSpace(c.Name)
 				if id != "" && name != "" {
@@ -337,6 +343,16 @@ func transcriptMessagesToSDK(msgs []session.TranscriptMessage) []message.Message
 			continue
 		}
 		out = append(out, msg)
+
+		// Append matching tool result messages immediately after assistant message.
+		if role == "assistant" && len(toolCalls) > 0 {
+			for _, tc := range toolCalls {
+				if toolMsg, ok := toolResultsByID[tc.ID]; ok {
+					out = append(out, toolMsg)
+					delete(toolResultsByID, tc.ID)
+				}
+			}
+		}
 	}
 	return out
 }

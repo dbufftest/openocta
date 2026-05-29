@@ -8,6 +8,7 @@ import (
 	"github.com/tencent-connect/botgo/log"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"time"
 
@@ -200,6 +201,11 @@ func New(ctx context.Context, opts Options) (*Runtime, error) {
 		// Ask for Bash tool calls by default; approvals are persisted and can whitelist sessions via TTL.
 		if !containsRule(apiOpts.SettingsOverrides.Permissions.Ask, "bash") {
 			apiOpts.SettingsOverrides.Permissions.Ask = append(apiOpts.SettingsOverrides.Permissions.Ask, "bash")
+		}
+		// Allow windows_exec_cmd on Windows to prevent missing tool response messages.
+		// This tool should execute directly without requiring user confirmation.
+		if runtime.GOOS == "windows" && !containsRule(apiOpts.SettingsOverrides.Permissions.Allow, "windows_exec_cmd") {
+			apiOpts.SettingsOverrides.Permissions.Allow = append(apiOpts.SettingsOverrides.Permissions.Allow, "windows_exec_cmd")
 		}
 
 		// Write approval queue config to ~/.openocta/workspace/.claude/settings.json.

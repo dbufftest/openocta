@@ -62,6 +62,14 @@ func (t WindowsCmdTool) Execute(ctx context.Context, params map[string]interface
 		return &tool.ToolResult{Success: false, Output: "command is required"}, nil
 	}
 
+	// Detect interactive commands that will hang waiting for stdin
+	if isInteractiveCommand(cmdStr) {
+		return &tool.ToolResult{
+			Success: false,
+			Output:  "Interactive command detected. Commands like 'ssh', 'mysql', 'redis-cli' require interactive input and will hang. Use non-interactive alternatives: ssh with sshpass or SSH keys, mysql with -e flag, etc.",
+		}, nil
+	}
+
 	// Parse optional timeout parameter
 	timeout := t.Timeout
 	if timeout == 0 {
@@ -132,6 +140,7 @@ func (t WindowsCmdTool) Execute(ctx context.Context, params map[string]interface
 
 func resolvePreferredWindowsShell(command string) (exe string, argv []string, name string) {
 	// 优先使用 PowerShell（Windows 内置，兼容大多数 Unix 命令别名）
+	// 不使用 -WindowStyle Hidden，由 SysProcAttr.HideWindow 控制窗口隐藏
 	if ps := findPowerShell(); ps != "" {
 		return ps, []string{"-NoProfile", "-Command", command}, "powershell"
 	}

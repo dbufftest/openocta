@@ -35,7 +35,7 @@ func approvalQueueMiddleware(q *octasecurity.ApprovalQueue, blockWait bool) midd
 			if !ok {
 				return nil
 			}
-			if !strings.EqualFold(strings.TrimSpace(call.Name), "bash") {
+			if !strings.EqualFold(strings.TrimSpace(call.Name), "bash") && !strings.EqualFold(strings.TrimSpace(call.Name), "windows_exec_cmd") {
 				return nil
 			}
 			cmd, _ := call.Arguments["command"].(string)
